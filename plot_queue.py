@@ -105,11 +105,11 @@ for line in lines:
 plt.scatter(x_range, dw_plot)
 plt.ylabel("Download Times")
 plt.grid(True)
-plt.xlabel("Seconds")
+
 
 if args.out:
     print 'saving to', file_name
-    plt.savefig(args.out)
+    plt.savefig(file_name)
 else:
     plt.show()
 
