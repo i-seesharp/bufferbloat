@@ -90,6 +90,7 @@ if args.out:
 else:
     plt.show()
 
+plt.clf()
 file_name = args.downloads[0]+"/download.png"
 plt.figure(figsize=(16,6))
 dw_plot = []
