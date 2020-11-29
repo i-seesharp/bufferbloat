@@ -229,7 +229,7 @@ def bufferbloat():
     while True:
         #Execution pauses for 1 second-then on every 2nd second - it fetches the webpage
         #Yield a fetch once every 2 seconds
-        sleep(1)
+        sleep(2)
         iter_popen = get_webpage(net)
         download_popens.append(iter_popen)
         #We move the calls to communicate, outside of the loop because 
@@ -245,7 +245,7 @@ def bufferbloat():
     time_taken = []
     for p in download_popens:
         time_taken.append(float(p.communicate()[0]))
-
+    print "Length of time_taken : ",len(time_taken)
     # TODO: compute average (and standard deviation) of the fetch
     # times.  You don't need to plot them.  Just note it in your
     # README and explain.
