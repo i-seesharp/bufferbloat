@@ -10,6 +10,12 @@ from pylab import figure
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--downloads', '-d',
+                    help="Queue timeseries plot for download times",
+                    required=True,
+                    action="store",
+                    nargs='+',
+                    dest="downloads")
 parser.add_argument('--files', '-f',
                     help="Queue timeseries output to one plot",
                     required=True,
@@ -83,3 +89,28 @@ if args.out:
     plt.savefig(args.out)
 else:
     plt.show()
+
+file_name = args.downloads[0]+"/download.png"
+plt.figure(figsize=(16,6))
+dw_plot = []
+
+f = open(args.downloads[0]+"/download_time.txt", 'r')
+lines = f.readlines()
+x_range = []
+index = 0
+for line in lines:
+    dw_plot.append(float(line))
+    x_range.append(index)
+    index = index + 1
+plt.scatter(x_range, dw_plot)
+plt.ylabel("Download Times")
+plt.grid(True)
+plt.xlabel("Seconds")
+
+if args.out:
+    print 'saving to', file_name
+    plt.savefig(args.out)
+else:
+    plt.show()
+
+

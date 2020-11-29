@@ -249,7 +249,11 @@ def bufferbloat():
     # TODO: compute average (and standard deviation) of the fetch
     # times.  You don't need to plot them.  Just note it in your
     # README and explain.
-
+    download_file = args.dir+"/download_time.txt"
+    f = open(download_file, 'w')
+    for i in range(len(time_taken)):
+        f.write("%s \n"%time_taken[i])
+    f.close()
     #Computing Average and standard deviation
     avg_t = compute_average(time_taken)
     stddev_t = compute_stddev(time_taken)
