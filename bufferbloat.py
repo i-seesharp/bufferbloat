@@ -80,7 +80,40 @@ class BBTopo(Topo):
         # interface names will change from s0-eth1 to newname-eth1.
         switch = self.addSwitch('s0')
 
+
         # TODO: Add links with appropriate characteristics
+
+        isHostBW = [True] #The first host bw 
+        for i in range(n-1):
+            isHostBW.append(False)
+        for i in range(1,n+1):
+            bw_arg = args.bw_net
+            if isHostBW[i-1]:
+                bw_arg = args.bw_host
+            
+            self.addLink(hosts[i], switch, bw=bw_arg, delay=args.delay, max_queue_size=args.maxq)
+
+def compute_average(lst):
+    total = 0.0
+    for elem in lst:
+        total += elem
+    return float(total)/float(len(lst))            
+
+def compute_stddev(lst):
+    avg = compute_average(lst)
+    total = 0.0
+    for elem in lst:
+        total = total + (elem - avg)**2
+    var = float(total)/float(len(lst))
+    return var**0.5
+
+def get_webpage(net):
+    h1 = net.get('h1')
+    h2 = net.get('h2')
+
+    h1_IP = h1.IP()
+    popen = h2.popen('curl -o /dev/null -s -w %%{time_total} %s/http/index.html' % h1_IP)
+    return popen
 
 # Simple wrappers around monitoring utilities.  You are welcome to
 # contribute neatly written (using classes) monitoring scripts for
@@ -112,6 +145,15 @@ def start_iperf(net):
     # TODO: Start the iperf client on h1.  Ensure that you create a
     # long lived TCP flow. You may need to redirect iperf's stdout to avoid blocking.
 
+    #We need to be able to fit all the proper arguments into a string
+    command = "iperf -c "
+    h2_IP = h2.IP()
+    command = command + str(h2_IP) + " -t "
+    command = command + str(args.time) + " > "
+    command = command + str(args.dir) + "/iperf.out"
+
+    h1.popen(s, shell=True)
+
 def start_webserver(net):
     h1 = net.get('h1')
     proc = h1.popen("python http/webserver.py", shell=True)
@@ -130,7 +172,8 @@ def start_ping(net):
     # until stdout is read. You can avoid this by runnning popen.communicate() or
     # redirecting stdout
     h1 = net.get('h1')
-    popen = h1.popen("echo '' > %s/ping.txt"%(args.dir), shell=True)
+    h2 = net.get('h2')
+    popen = h1.popen("ping -i 0.1 %s > %s/ping.txt"%(h2.IP(), args.dir), shell=True)
 
 def bufferbloat():
     if not os.path.exists(args.dir):
@@ -161,10 +204,11 @@ def bufferbloat():
     #
     # qmon = start_qmon(iface='s0-eth2',
     #                  outfile='%s/q.txt' % (args.dir))
-    qmon = None
+    qmon = start_qmon(iface='s0-eth2', outfile='%s/q.txt'%(args.dir))
 
     # TODO: Start iperf, webservers, etc.
-    # start_iperf(net)
+    start_iperf(net)
+    start_webserver(net)
 
     # Hint: The command below invokes a CLI which you can use to
     # debug.  It allows you to run arbitrary commands inside your
@@ -179,19 +223,47 @@ def bufferbloat():
     # spawned on host h1 (not from google!)
     # Hint: have a separate function to do this and you may find the
     # loop below useful.
+    download_popens = []
     start_time = time()
+    
     while True:
-        # do the measurement (say) 3 times.
+        #Execution pauses for 1 second-then on every 2nd second - it fetches the webpage
+        #Yield a fetch once every 2 seconds
         sleep(1)
+        iter_popen = get_webpage(net)
+        download_popens.append(iter_popen)
+        #We move the calls to communicate, outside of the loop because 
+        #the call wastes time/introduces delay preventing us from actually calling
+        #get_webpage once every 2 seconds.
         now = time()
         delta = now - start_time
         if delta > args.time:
             break
         print "%.1fs left..." % (args.time - delta)
 
+    #Call communicate on all popens we have from webpage fetches
+    time_taken = []
+    for p in download_popens:
+        time_taken.append(float(p.communicate()[0]))
+
     # TODO: compute average (and standard deviation) of the fetch
     # times.  You don't need to plot them.  Just note it in your
     # README and explain.
+
+    #Computing Average and standard deviation
+    avg_t = compute_average(time_taken)
+    stddev_t = compute_stddev(time_taken)
+    stats = [avg_t, stddev_t]
+
+    #Store the average and stddev in a file 
+    file_name = args.dir+"/stats.txt"
+    temp = ["Average : %2f", "Std Deviation : %2f"]
+    f = open(file_name, 'w') #Write mode so everytime program runs, the file is re written
+    for i in range(len(temp)):
+        f.write(temp[i]%stats[i])
+        f.write("\n")
+    f.close()
+
 
     stop_tcpprobe()
     if qmon is not None:
