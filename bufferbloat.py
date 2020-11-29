@@ -91,7 +91,7 @@ class BBTopo(Topo):
             if isHostBW[i-1]:
                 bw_arg = args.bw_host
             
-            self.addLink(hosts[i], switch, bw=bw_arg, delay=args.delay, max_queue_size=args.maxq)
+            self.addLink(hosts[i-1], switch, bw=bw_arg, delay=args.delay, max_queue_size=args.maxq)
 
 def compute_average(lst):
     total = 0.0
@@ -151,8 +151,8 @@ def start_iperf(net):
     command = command + str(h2_IP) + " -t "
     command = command + str(args.time) + " > "
     command = command + str(args.dir) + "/iperf.out"
-
-    h1.popen(s, shell=True)
+    h1 = net.get('h1')
+    h1.popen(command, shell=True)
 
 def start_webserver(net):
     h1 = net.get('h1')
