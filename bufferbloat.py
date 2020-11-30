@@ -94,12 +94,14 @@ class BBTopo(Topo):
             self.addLink(hosts[i-1], switch, bw=bw_arg, delay=args.delay, max_queue_size=args.maxq)
 
 def compute_average(lst):
+    #A helper function to compute the average of the download times.
     total = 0.0
     for elem in lst:
         total += elem
     return float(total)/float(len(lst))            
 
 def compute_stddev(lst):
+    #A helper function to compute the standard deviation of the download times.
     avg = compute_average(lst)
     total = 0.0
     for elem in lst:
@@ -110,10 +112,10 @@ def compute_stddev(lst):
 def get_webpage(net):
     h1 = net.get('h1')
     h2 = net.get('h2')
-
+    #After we have received the host objects. we can the server's IP
     h1_IP = h1.IP()
     popen = h2.popen('curl -o /dev/null -s -w %%{time_total} %s/http/index.html' % h1_IP)
-    return popen
+    return popen #return the popen object containing the time.
 
 # Simple wrappers around monitoring utilities.  You are welcome to
 # contribute neatly written (using classes) monitoring scripts for
@@ -148,6 +150,7 @@ def start_iperf(net):
     #We need to be able to fit all the proper arguments into a string
     command = "iperf -c "
     h2_IP = h2.IP()
+    #Form the command, to send to popen
     command = command + str(h2_IP) + " -t "
     command = command + str(args.time) + " > "
     command = command + str(args.dir) + "/iperf.out"
@@ -173,6 +176,7 @@ def start_ping(net):
     # redirecting stdout
     h1 = net.get('h1')
     h2 = net.get('h2')
+    #Execute a ping command measuring RTT through opoen every 0.1s
     popen = h1.popen("ping -i 0.1 %s > %s/ping.txt"%(h2.IP(), args.dir), shell=True)
 
 def bufferbloat():
@@ -223,8 +227,8 @@ def bufferbloat():
     # spawned on host h1 (not from google!)
     # Hint: have a separate function to do this and you may find the
     # loop below useful.
-    download_popens = []
-    start_time = time()
+    download_popens = [] #collection of all popen objects which consist of the fetch times
+    start_time = time() #record the start time
     
     while True:
         #Execution pauses for 1 second-then on every 2nd second - it fetches the webpage
@@ -249,7 +253,7 @@ def bufferbloat():
     # TODO: compute average (and standard deviation) of the fetch
     # times.  You don't need to plot them.  Just note it in your
     # README and explain.
-    download_file = args.dir+"/download_time.txt"
+    download_file = args.dir+"/download_time.txt" #name of file where we save all the download times.
     f = open(download_file, 'w')
     for i in range(len(time_taken)):
         f.write("%s \n"%time_taken[i])
@@ -257,7 +261,7 @@ def bufferbloat():
     #Computing Average and standard deviation
     avg_t = compute_average(time_taken)
     stddev_t = compute_stddev(time_taken)
-    stats = [avg_t, stddev_t]
+    stats = [avg_t, stddev_t] #collection of important statistics to be written to stats.txt
 
     #Store the average and stddev in a file 
     file_name = args.dir+"/stats.txt"

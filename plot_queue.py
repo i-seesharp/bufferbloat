@@ -16,6 +16,12 @@ parser.add_argument('--downloads', '-d',
                     action="store",
                     nargs='+',
                     dest="downloads")
+parser.add_argument('--size', '-s',
+                    help="Buffer-size",
+                    required=True,
+                    action="store",
+                    nargs='+',
+                    dest="size")
 parser.add_argument('--files', '-f',
                     help="Queue timeseries output to one plot",
                     required=True,
@@ -91,10 +97,11 @@ else:
     plt.show()
 
 plt.clf()
-file_name = args.downloads[0]+"/download.png"
+#Here, we plot download times and untimately save the plot in download-#.png
+file_name = args.downloads[0]+"/download-"+args.size[0]+".png"
 plt.figure(figsize=(16,6))
 dw_plot = []
-
+#We read the download times from the file below, where bufferbloat.py saved the download times.
 f = open(args.downloads[0]+"/download_time.txt", 'r')
 lines = f.readlines()
 x_range = []
